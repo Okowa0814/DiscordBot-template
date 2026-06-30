@@ -7,8 +7,6 @@ class RoleSelector(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # 透過 on_interaction 攔截所有 role_btn_ 開頭的按鈕點擊
-    # 好處：Bot 重啟後按鈕依然有效，無需重新執行指令
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         if interaction.type != discord.InteractionType.component:
@@ -26,7 +24,7 @@ class RoleSelector(commands.Cog):
         role = interaction.guild.get_role(role_id)
         if role is None:
             await interaction.response.send_message(
-                "❌ 身分組不存在，請聯絡管理員。",
+                "❌ Role not found, please contact an administrator.",
                 ephemeral=True
             )
             return
@@ -36,35 +34,34 @@ class RoleSelector(commands.Cog):
 
         try:
             if has_role:
-                await member.remove_roles(role, reason="使用者透過按鈕移除身分組")
+                await member.remove_roles(role, reason="User removed role via button")
                 await interaction.response.send_message(
-                    f"✅ 已移除您的 **{role.name}** 身分組。",
+                    f"✅ Removed the **{role.name}** role from you.",
                     ephemeral=True
                 )
             else:
-                await member.add_roles(role, reason="使用者透過按鈕選擇身分組")
+                await member.add_roles(role, reason="User selected role via button")
                 await interaction.response.send_message(
-                    f"✅ 已賦予您 **{role.name}** 身分組！",
+                    f"✅ Added the **{role.name}** role to you!",
                     ephemeral=True
                 )
         except discord.Forbidden:
             await interaction.response.send_message(
-                "❌ Bot 權限不足，請確認 Bot 身分組順序。",
+                "❌ Bot lacks permissions, please check the Bot role hierarchy.",
                 ephemeral=True
             )
         except discord.HTTPException as e:
             await interaction.response.send_message(
-                f"❌ 發生錯誤：{e}",
+                f"❌ An error occurred: {e}",
                 ephemeral=True
             )
 
-    @app_commands.command(name="setup_roles", description="在此頻道建立身分組選擇按鈕")
-    @app_commands.describe(roles_string="輸入身分組名稱或 ID，以空格分隔")
+    @app_commands.command(name="setup_roles", description="Create role selection buttons in this channel")
+    @app_commands.describe(roles_string="Enter role names or IDs, separated by spaces")
     @app_commands.default_permissions(administrator=True)
     async def setup_roles(self, interaction: discord.Interaction, roles_string: str):
         await interaction.response.defer(ephemeral=True)
 
-        # 支援逗號或空格分隔
         raw_tokens = roles_string.replace(",", " ").split()
         roles: list[discord.Role] = []
         failed: list[str] = []
@@ -76,11 +73,9 @@ class RoleSelector(commands.Cog):
 
             role: discord.Role | None = None
 
-            # 優先嘗試 ID 查詢
             if token.isdigit():
                 role = interaction.guild.get_role(int(token))
 
-            # 若 ID 查不到，改用名稱（不分大小寫）
             if role is None:
                 role = discord.utils.find(
                     lambda r, t=token: r.name.lower() == t.lower(),
@@ -94,15 +89,14 @@ class RoleSelector(commands.Cog):
 
         if not roles:
             await interaction.followup.send(
-                "❌ 找不到任何有效的身分組，請確認名稱或 ID 是否正確。",
+                "❌ No valid roles found, please check the names or IDs.",
                 ephemeral=True
             )
             return
 
-        # Discord 每個 ActionRow 最多 5 個按鈕，最多 5 行，共 25 個
         if len(roles) > 25:
             await interaction.followup.send(
-                "❌ 身分組數量不可超過 25 個。",
+                "❌ Cannot add more than 25 roles.",
                 ephemeral=True
             )
             return
@@ -116,14 +110,14 @@ class RoleSelector(commands.Cog):
             ))
 
         await interaction.channel.send(
-            content="🎭 **選擇您的身分組**\n點擊下方按鈕來獲取對應身分組：",
+            content="🎭 **Select Your Role**\nClick a button below to get the corresponding role:",
             view=view
         )
 
-        reply = f"✅ 已在此頻道建立 **{len(roles)}** 個身分組按鈕。"
+        reply = f"✅ Created **{len(roles)}** role button(s) in this channel."
         if failed:
-            failed_str = "、".join(f"`{f}`" for f in failed)
-            reply += f"\n⚠️ 以下輸入找不到對應身分組，已略過：{failed_str}"
+            failed_str = ", ".join(f"`{f}`" for f in failed)
+            reply += f"\n⚠️ The following inputs could not be matched to any role and were skipped: {failed_str}"
         await interaction.followup.send(reply, ephemeral=True)
 
 

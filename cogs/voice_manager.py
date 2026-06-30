@@ -3,14 +3,12 @@ import os
 import discord
 from discord.ext import commands
 
-# 「點我創頻道」語音頻道的 ID，從環境變數讀取
 CREATE_CHANNEL_ID: int = int(os.getenv("CREATE_CHANNEL_ID", "0"))
 
 
 class VoiceManager(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # 記錄所有動態建立的頻道 ID，Bot 重啟後重置
         self.dynamic_channels: set[int] = set()
 
     @commands.Cog.listener()
@@ -20,11 +18,9 @@ class VoiceManager(commands.Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
-        # 使用者進入觸發頻道 → 建立專屬頻道並移動
         if after.channel and after.channel.id == CREATE_CHANNEL_ID:
             await self._create_channel_for(member, after.channel)
 
-        # 使用者離開某個動態頻道 → 若已空則刪除
         if before.channel and before.channel.id in self.dynamic_channels:
             if len(before.channel.members) == 0:
                 await self._delete_channel(before.channel)
@@ -34,26 +30,26 @@ class VoiceManager(commands.Cog):
     ):
         try:
             new_channel = await member.guild.create_voice_channel(
-                name=f"{member.display_name} 的頻道",
+                name=f"{member.display_name}'s Channel",
                 category=trigger.category,
-                reason="動態語音頻道：自動建立",
+                reason="Dynamic voice channel: auto-created",
             )
             self.dynamic_channels.add(new_channel.id)
             await member.move_to(new_channel)
-            print(f"[VoiceManager] 已為 {member} 建立頻道：{new_channel.name}")
+            print(f"[VoiceManager] Created channel for {member}: {new_channel.name}")
         except discord.Forbidden:
-            print(f"[VoiceManager] 權限不足，無法建立頻道或移動 {member}。")
+            print(f"[VoiceManager] Missing permissions to create channel or move {member}.")
         except discord.HTTPException as e:
-            print(f"[VoiceManager] 建立頻道失敗：{e}")
+            print(f"[VoiceManager] Failed to create channel: {e}")
 
     async def _delete_channel(self, channel: discord.VoiceChannel):
         try:
-            await channel.delete(reason="動態語音頻道：人數歸零，自動刪除")
-            print(f"[VoiceManager] 已刪除空頻道：{channel.name}")
+            await channel.delete(reason="Dynamic voice channel: empty, auto-deleted")
+            print(f"[VoiceManager] Deleted empty channel: {channel.name}")
         except discord.NotFound:
-            pass  # 頻道已不存在，無需處理
+            pass
         except discord.Forbidden:
-            print(f"[VoiceManager] 權限不足，無法刪除頻道：{channel.name}")
+            print(f"[VoiceManager] Missing permissions to delete channel: {channel.name}")
         finally:
             self.dynamic_channels.discard(channel.id)
 

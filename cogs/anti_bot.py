@@ -13,9 +13,9 @@ class AntiBot(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if TRAP_CHANNEL_ID == 0:
-            print("[AntiBot] 警告：TRAP_CHANNEL_ID 未設定，停權系統未啟用。")
+            print("[AntiBot] Warning: Anti-bot system is disabled. Please set the TRAP_CHANNEL_ID environment variable to enable it.")
         else:
-            print(f"[AntiBot] 停權系統已啟用，陷阱頻道 ID：{TRAP_CHANNEL_ID}")
+            print(f"[AntiBot] Ban system enabled. Trap channel ID: {TRAP_CHANNEL_ID}")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -32,13 +32,13 @@ class AntiBot(commands.Cog):
 
 
         try:
-            await member.kick(reason="在陷阱頻道發言")
-            print(f"[AntiBot] 已踢出 {member} (ID: {member.id})")
+            await member.kick(reason="Sent a message in the trap channel")
+            print(f"[AntiBot] Kicked {member} (ID: {member.id})")
             await message.delete()
         except discord.Forbidden:
             pass
         except discord.HTTPException as e:
-            print(f"[AntiBot] 踢出失敗：{e}")
+            print(f"[AntiBot] Failed to kick member: {e}")
 
 
 async def setup(bot: commands.Bot):
