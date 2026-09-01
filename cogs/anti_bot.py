@@ -5,7 +5,6 @@ from discord.ext import commands
 
 TRAP_CHANNEL_ID: int = int(os.getenv("TRAP_CHANNEL_ID") or "0")
 
-
 class AntiBot(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -29,7 +28,6 @@ class AntiBot(commands.Cog):
             return
 
         member = message.author
-
 
         try:
             await member.kick(reason="Sent a message in the trap channel")
