@@ -28,7 +28,9 @@ class VoiceManager(commands.Cog):
     async def _create_channel_for(
         self, member: discord.Member, trigger: discord.VoiceChannel
     ):
-        try:
+        me = member.guild.me
+        me_permission = me.guild_permissions
+        if me_permission.manage_channels and me_permission.move_members:
             new_channel = await member.guild.create_voice_channel(
                 name=f"{member.display_name}'s Channel",
                 category=trigger.category,
@@ -37,21 +39,19 @@ class VoiceManager(commands.Cog):
             self.dynamic_channels.add(new_channel.id)
             await member.move_to(new_channel)
             print(f"[VoiceManager] Created channel for {member}: {new_channel.name}")
-        except discord.Forbidden:
+        else:
             print(f"[VoiceManager] Missing permissions to create channel or move {member}.")
-        except discord.HTTPException as e:
-            print(f"[VoiceManager] Failed to create channel: {e}")
 
-    async def _delete_channel(self, channel: discord.VoiceChannel):
-        try:
+    async def _delete_channel(self, channel: discord.VoiceChannel | None):
+        me = channel.guild.me
+        me_permission = me.guild_permissions
+        if me_permission.manage_channels and me_permission.move_members and channel:
             await channel.delete(reason="Dynamic voice channel: empty, auto-deleted")
             print(f"[VoiceManager] Deleted empty channel: {channel.name}")
-        except discord.NotFound:
-            pass
-        except discord.Forbidden:
+        else:
             print(f"[VoiceManager] Missing permissions to delete channel: {channel.name}")
-        finally:
-            self.dynamic_channels.discard(channel.id)
+
+        self.dynamic_channels.discard(channel.id)
 
 
 async def setup(bot: commands.Bot):

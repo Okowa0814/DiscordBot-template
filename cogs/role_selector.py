@@ -31,8 +31,10 @@ class RoleSelector(commands.Cog):
 
         member = interaction.user
         has_role = role in member.roles
-
-        try:
+        me = interaction.guild.me
+        me_top_role = me.top_role
+        me_permission = me.guild_permissions
+        if me_top_role > role and me_permission.manage_roles:
             if has_role:
                 await member.remove_roles(role, reason="User removed role via button")
                 await interaction.response.send_message(
@@ -45,14 +47,9 @@ class RoleSelector(commands.Cog):
                     f"✅ Added the **{role.name}** role to you!",
                     ephemeral=True
                 )
-        except discord.Forbidden:
+        else:
             await interaction.response.send_message(
                 "❌ Bot lacks permissions, please check the Bot role hierarchy.",
-                ephemeral=True
-            )
-        except discord.HTTPException as e:
-            await interaction.response.send_message(
-                f"❌ An error occurred: {e}",
                 ephemeral=True
             )
 
