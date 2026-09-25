@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Bot Online：{bot.user} (ID: {bot.user.id})")
+    print(f"Bot Online: {bot.user} (ID: {bot.user.id})")
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} slash commands")

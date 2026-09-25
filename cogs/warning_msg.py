@@ -11,10 +11,10 @@ class WarningMsg(commands.Cog):
     @app_commands.default_permissions(administrator=True)
     async def warning_msg(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="❌不要在這裡打字！",
+            title="❌ Do NOT type in this channel!",
             description=(
-                "這個頻道是用來偵測並停權那些帳號被盜的成員\n\n"
-                "如果在這裡打字 你就會被Ban"
+                "This channel is used to detect and remove compromised accounts.\n\n"
+                "If you send a message here, you will be kicked from the server."
             ),
             color=discord.Color.red()
         )

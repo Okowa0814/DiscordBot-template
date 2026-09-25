@@ -110,7 +110,7 @@ class RoleSelector(commands.Cog):
             ))
 
         await interaction.channel.send(
-            content="🎭 # 領取身份組 **Select Your Role**\nClick a button below to get the corresponding role:",
+            content="# 🎭 Select Your Role\nClick a button below to get the corresponding role:",
             view=view
         )
 
